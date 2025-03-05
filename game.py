@@ -10,6 +10,7 @@ class Game:
     def __init__(self):
         pygame.init()
 
+        #setting screen
         pygame.display.set_caption('Winter Run')
         self.screen = pygame.display.set_mode((640, 480))
         self.display = pygame.Surface((320, 240), pygame.SRCALPHA)
@@ -46,11 +47,15 @@ class Game:
         snow = []
         decor = []
         enemies = []
+        self.map = tilemap.fill_map(self.floor_depth, self.assets['ground_tile'], self.map)
         while True:
+
             self.display.fill((0, 0, 0))
-            
+
+            #player running animation
             self.display.blit(self.assets['player_running'][(count//5)%3], self.player_pos)
-            self.map = tilemap.fill_map(self.floor_depth, self.assets['ground_tile'], self.map)
+
+            #setting ground tiles
             
             for tile in self.map:
                 left = tile[0].left - int(self.scroll[0])
@@ -66,7 +71,11 @@ class Game:
                     type = random.randint(0,1)
                     snow.append([[pos, -5], type])
 
+            snow = [part for part in snow if part[0][1] < self.floor_depth]
+
+            #display snow
             for part in snow:
+                
                 if part[0][1]<self.floor_depth:
                     part[0][1] += 1
                     if part[1] == 0:
@@ -74,18 +83,24 @@ class Game:
                     else:
                         self.display.blit(self.assets['large_snow'], (part[0][0]-int(self.scroll[0])+math.cos(count)*0.01, part[0][1]-0.5))
             
+            #set position of decor
             if random.random() * 100 > 80 and count%16==0:
                 decor.append([(352+self.scroll[0]), self.floor_depth-16])
+            
+            decor[:] = [d for d in decor if d[0] - int(self.scroll[0]) > -16]
 
+            #display decor
             for dec in decor:
-                if(dec[0]-int(self.scroll[0]>-16)):
+                if(dec[0]-int(self.scroll[0])>-16):
                     self.display.blit(self.assets['tree'], (dec[0]-int(self.scroll[0]), dec[1]))
 
             if(count%random.randint(30, 40)==0):
                     pos = random.randint(0, self.floor_depth-16)
                     enemies.append(pygame.Rect(352+int(self.scroll[0]*1.5), pos, 9, 16))
 
-            for animal in enemies:
+            enemies[:] = [animal for animal in enemies if animal.x - int(self.scroll[0] * 1.5) > -16]
+
+            for animal in enemies:        
                 self.display.blit(self.assets['animal'], (animal.x-int(self.scroll[0]*1.5), animal.y+math.cos(count//10)*3))
                 rect = pygame.Rect(animal.x-int(self.scroll[0]*1.5), animal.y+math.cos(count//10)*3, 9, 16)
                 if self.player.colliderect(rect):
@@ -131,6 +146,6 @@ class Game:
             pygame.display.update()
             self.clock.tick(60)
 
-            print(count)
+
 
 Game().run()
