@@ -27,7 +27,8 @@ class Game:
             'small_snow' : load_image("decor/small_snow.png"),
             'large_snow': load_image("decor/large_snow.png"),
             'tree':  load_image("decor/tree.png"),
-            'animal' : load_image("animals/jumper/jumper_1.png")
+            'animal' : load_image("animals/jumper/jumper_1.png"),
+            'numbers': load_images("numbers")
         }
         
         self.map = []
@@ -54,6 +55,11 @@ class Game:
 
             #player running animation
             self.display.blit(self.assets['player_running'][(count//5)%3], self.player_pos)
+
+            #Score_system
+            score = str(count//6)
+            for i in range(len(score)):
+                self.display.blit(self.assets['numbers'][int(score[i])], (10 + 8*i, 10))
 
             #setting ground tiles
             
@@ -118,11 +124,11 @@ class Game:
             if self.player_up == False:
                 self.player_pos[1] += self.gravity
             else:
-                self.player_pos[1] -= 1
+                self.player_pos[1] -= 2
             self.player.x = self.player_pos[0]
             self.player.y = self.player_pos[1]
-            if count%300==0 and count<800:
-                self.offset += 0.2
+            if count%300==0 and self.offset < 2.5:
+                self.offset += 0.5
             
             
             self.scroll[0] += self.offset
