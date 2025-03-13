@@ -28,7 +28,8 @@ class Game:
             'large_snow': load_image("decor/large_snow.png"),
             'tree':  load_image("decor/tree.png"),
             'animal' : load_image("animals/jumper/jumper_1.png"),
-            'numbers': load_images("numbers")
+            'numbers': load_images("numbers"),
+            'coin' : load_image("addons/coin_0.png")
         }
         
         self.map = []
@@ -44,25 +45,45 @@ class Game:
 
     def run(self):
         count = 0
-
+        num = 0
         snow = []
         decor = []
         enemies = []
+        coins = []
         self.map = tilemap.fill_map(self.floor_depth, self.assets['ground_tile'], self.map)
         while True:
-
             self.display.fill((0, 0, 0))
 
             #player running animation
             self.display.blit(self.assets['player_running'][(count//5)%3], self.player_pos)
 
-            #Score_system
-            score = str(count//6)
+            #Score system
+            score = str(count//6 + num*30)
             for i in range(len(score)):
                 self.display.blit(self.assets['numbers'][int(score[i])], (10 + 8*i, 10))
 
+            money = str(num)
+            self.display.blit(self.assets['coin'], (10, 30))
+            for i in range(len(money)):
+                self.display.blit(self.assets['numbers'][int(money[i])], (20 + 8*i, 32))
+
+            #Coin system
+            if(count%random.randint(30, 40)==0):
+                    pos = random.randint(0, self.floor_depth-16)
+                    coins.append([pygame.Rect(352+int(self.scroll[0]), pos, 8, 12), True])
+
+            coins[:] = [coin for coin in coins if coin[0].x - int(self.scroll[0]) > -16]
+
+            for coin in coins:
+                if coin[1] == True: 
+                    self.display.blit(self.assets['coin'], (coin[0].x-int(self.scroll[0]), coin[0].y))
+                rect = pygame.Rect(coin[0].x-int(self.scroll[0]), coin[0].y, 8, 12)
+                if self.player.colliderect(rect):
+                    if(coin[1]==True):
+                        num+=1
+                    coin[1] = False
+
             #setting ground tiles
-            
             for tile in self.map:
                 left = tile[0].left - int(self.scroll[0])
                 if(left>-16):
@@ -80,8 +101,7 @@ class Game:
             snow = [part for part in snow if part[0][1] < self.floor_depth]
 
             #display snow
-            for part in snow:
-                
+            for part in snow:   
                 if part[0][1]<self.floor_depth:
                     part[0][1] += 1
                     if part[1] == 0:
@@ -100,6 +120,7 @@ class Game:
                 if(dec[0]-int(self.scroll[0])>-16):
                     self.display.blit(self.assets['tree'], (dec[0]-int(self.scroll[0]), dec[1]))
 
+            #setting enemy positions at random
             if(count%random.randint(30, 40)==0):
                     pos = random.randint(0, self.floor_depth-16)
                     enemies.append(pygame.Rect(352+int(self.scroll[0]*1.5), pos, 9, 16))
@@ -112,12 +133,27 @@ class Game:
                 if self.player.colliderect(rect):
                     pause = True
                     while pause:
+                        count = 0
+                        num = 0
+                        self.map = []
+                        snow = []
+                        decor = []
+                        enemies = []
+                        coins = []
+                        self.player = pygame.Rect(self.player_pos, (9, 16))
+                        self.player_pos = [50, 50]
+                        self.offset = 1
+                        self.scroll = [0, 0]
+                        self.clock = pygame.time.Clock()
+                        self.movement = [False, False]
+                        self.player_up = False
+                        self.map = tilemap.fill_map(self.floor_depth, self.assets['ground_tile'], self.map)
                         for event in pygame.event.get():
                             if event.type == pygame.QUIT:
                                 pygame.quit()
                                 sys.exit()
                             if event.type == pygame.KEYDOWN:
-                                if event.key == pygame.K_P:
+                                if event.key == pygame.K_p:
                                     pause = False
 
 
