@@ -32,6 +32,15 @@ class Game:
             'coin' : load_image("addons/coin_0.png"),
             'star': load_image("addons/star.png")
         }
+
+        self.sfx = {
+            'coin' : pygame.mixer.Sound('data/sfx/coin_3.mp3'),
+            'thruster': pygame.mixer.Sound(r'data\sfx\thruster\thruster_3.mp3'),
+            'background': pygame.mixer.Sound(r'data\sfx\backgroud\background_1.mp3')
+        }
+
+        self.sfx['coin'].set_volume(0.5)
+        self.sfx['thruster'].set_volume(0.4)
         
         self.map = []
         self.player_pos = [50, 50]
@@ -40,7 +49,7 @@ class Game:
         self.scroll = [0, 0]
         self.floor_depth = 192
         self.gravity = 4
-        self.player_up = False
+        self.player_up = True
         f = open("log.txt", "r+")
         text = f.read()
         if(text==""):
@@ -59,11 +68,22 @@ class Game:
         enemies = []
         coins = []
         self.map = tilemap.fill_map(self.floor_depth, self.assets['ground_tile'], self.map)
+
+        
+        pygame.mixer.music.load(r'data\sfx\backgroud\background_8.mp3')
+        pygame.mixer.music.set_volume(0.5)
+        pygame.mixer.music.play(-1)
         while True:
             self.display.fill((0, 0, 0))
 
             #player running animation
-            self.display.blit(self.assets['player_running'][(count//5)%3], self.player_pos)
+            if self.player_up == False:
+                self.display.blit(self.assets['player_running'][(count//5)%3], self.player_pos)
+            else:
+                if self.movement[1] == True:
+                    self.display.blit(self.assets['player_jump'][(count//5)%3], self.player_pos)
+                else:
+                    self.display.blit(self.assets['player_jump'][0], self.player_pos)
 
             #Score system
             score = str(count//6 + num*30)
@@ -96,6 +116,7 @@ class Game:
                 if self.player.colliderect(rect):
                     if(coin[1]==True):
                         num+=1
+                        pygame.mixer.Channel(0).play(self.sfx['coin'])
                     coin[1] = False
 
             #setting ground tiles
@@ -163,6 +184,9 @@ class Game:
                         self.movement = [False, False]
                         self.player_up = False
                         self.map = tilemap.fill_map(self.floor_depth, self.assets['ground_tile'], self.map)
+                        self.sfx['background'].stop()
+                        self.sfx['thruster'].stop()
+                        pygame.mixer.music.stop()
 
                         # updating highscore
                         f = open("log.txt", "r+")
@@ -176,12 +200,15 @@ class Game:
                             if event.type == pygame.KEYDOWN:
                                 if event.key == pygame.K_p:
                                     pause = False
+                                    pygame.mixer.music.play(-1)
 
 
-            if self.player_up == False:
+            if self.movement[1] == False:
                 self.player_pos[1] += self.gravity
+                self.sfx['thruster'].stop()
             else:
                 self.player_pos[1] -= 2
+                self.sfx['thruster'].play()
             self.player.x = self.player_pos[0]
             self.player.y = self.player_pos[1]
             if count%300==0 and self.offset < 2.5:
@@ -192,6 +219,7 @@ class Game:
             count+=1
             if(self.player_pos[1]+16>=self.floor_depth):
                 self.player_pos[1] = self.floor_depth-16
+                self.player_up = False
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -199,10 +227,11 @@ class Game:
                     sys.exit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_UP:
+                        self.movement[1] = True
                         self.player_up = True
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_UP:
-                        self.player_up = False
+                        self.movement[1] = False
 
             self.display_2.blit(self.display, (0, 0))
             self.screen.blit(pygame.transform.scale(self.display_2, self.screen.get_size()), (0, 0))
