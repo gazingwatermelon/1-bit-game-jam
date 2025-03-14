@@ -29,7 +29,8 @@ class Game:
             'tree':  load_image("decor/tree.png"),
             'animal' : load_image("animals/jumper/jumper_1.png"),
             'numbers': load_images("numbers"),
-            'coin' : load_image("addons/coin_0.png")
+            'coin' : load_image("addons/coin_0.png"),
+            'star': load_image("addons/star.png")
         }
         
         self.map = []
@@ -40,7 +41,14 @@ class Game:
         self.floor_depth = 192
         self.gravity = 4
         self.player_up = False
+        f = open("log.txt", "r+")
+        text = f.read()
+        if(text==""):
+            f.write("Highscore: 0")
         
+        f.seek(0)
+        text = f.read().strip()
+        self.highscore = int(text.split(":")[1])
         
 
     def run(self):
@@ -66,6 +74,13 @@ class Game:
             self.display.blit(self.assets['coin'], (10, 30))
             for i in range(len(money)):
                 self.display.blit(self.assets['numbers'][int(money[i])], (20 + 8*i, 32))
+
+            if int(score)>int(self.highscore):
+                self.highscore = score
+
+            self.display.blit(self.assets['star'], (10, 50))
+            for i in range(len(str(self.highscore))):
+                self.display.blit(self.assets['numbers'][int(str(self.highscore)[i])], (30 + 8*i, 54))
 
             #Coin system
             if(count%random.randint(30, 40)==0):
@@ -148,6 +163,12 @@ class Game:
                         self.movement = [False, False]
                         self.player_up = False
                         self.map = tilemap.fill_map(self.floor_depth, self.assets['ground_tile'], self.map)
+
+                        # updating highscore
+                        f = open("log.txt", "r+")
+                        f.seek(11)
+                        f.write(str(self.highscore))
+
                         for event in pygame.event.get():
                             if event.type == pygame.QUIT:
                                 pygame.quit()
