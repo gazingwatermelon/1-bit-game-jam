@@ -73,6 +73,7 @@ class Game:
         pygame.mixer.music.load(r'data\sfx\backgroud\background_8.mp3')
         pygame.mixer.music.set_volume(0.5)
         pygame.mixer.music.play(-1)
+        running  = True
         while True:
             self.display.fill((0, 0, 0))
 
@@ -220,6 +221,10 @@ class Game:
             if(self.player_pos[1]+16>=self.floor_depth):
                 self.player_pos[1] = self.floor_depth-16
                 self.player_up = False
+            
+            #ensring player does not go above seal
+            if self.player_pos[1]<=-2:
+                self.player_pos[1] = -2
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -229,6 +234,25 @@ class Game:
                     if event.key == pygame.K_UP:
                         self.movement[1] = True
                         self.player_up = True
+
+                    #Pause system if escape is pressed
+                    if event.key == pygame.K_ESCAPE:
+                        if running == True:
+                            running = False
+                        while not running:
+                            self.movement[1] = False
+                            # menu = pygame.Surface()
+                            pygame.mixer.music.stop()
+                            self.sfx['thruster'].stop()
+                            for event in pygame.event.get():
+                                if event.type == pygame.QUIT:
+                                    pygame.quit()
+                                    sys.exit()
+                                if event.type == pygame.KEYDOWN:
+                                    if event.key == pygame.K_ESCAPE:
+                                        running = True
+                                        pygame.mixer.music.play(-1)
+
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_UP:
                         self.movement[1] = False
